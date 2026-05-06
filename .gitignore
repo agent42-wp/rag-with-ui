@@ -1,0 +1,7 @@
+/.env
+/.venv
+/__pycache__
+/rag.7z
+/ragbk.7z
+/test.py
+/uploaded_pdfs

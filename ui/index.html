@@ -1,0 +1,1156 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RAG Chatbot</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg: #0d0f14;
+        --surface: #13161e;
+        --border: #1f2533;
+        --accent: #5de6a0;
+        --accent2: #3b82f6;
+        --text: #d4dbe8;
+        --muted: #4a5568;
+        --user-bubble: #1a2540;
+        --bot-bubble: #111820;
+        --danger: #f87171;
+        --mono: "JetBrains Mono", monospace;
+        --sans: "Syne", sans-serif;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--mono);
+        height: 100vh;
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        overflow: hidden;
+      }
+
+      /* ── SIDEBAR ── */
+      aside {
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        padding: 20px 16px;
+        gap: 14px;
+        overflow: hidden;
+      }
+
+      .logo {
+        font-family: var(--sans);
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--accent);
+        letter-spacing: -0.5px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .logo span {
+        color: var(--text);
+      }
+
+      .upload-zone {
+        border: 1.5px dashed var(--border);
+        border-radius: 10px;
+        padding: 20px 16px;
+        text-align: center;
+        cursor: pointer;
+        transition:
+          border-color 0.2s,
+          background 0.2s;
+        position: relative;
+        flex-shrink: 0;
+      }
+      .upload-zone:hover,
+      .upload-zone.drag {
+        border-color: var(--accent);
+        background: rgba(93, 230, 160, 0.04);
+      }
+      .upload-zone input {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+        width: 100%;
+      }
+      .upload-icon {
+        font-size: 24px;
+        margin-bottom: 6px;
+      }
+      .upload-label {
+        font-size: 11px;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+      .upload-label strong {
+        color: var(--accent);
+        font-weight: 600;
+      }
+
+      .btn-index {
+        background: var(--accent);
+        color: #0d0f14;
+        border: none;
+        border-radius: 8px;
+        padding: 10px;
+        font-family: var(--mono);
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        transition:
+          opacity 0.2s,
+          transform 0.1s;
+        letter-spacing: 0.5px;
+        flex-shrink: 0;
+      }
+      .btn-index:hover {
+        opacity: 0.88;
+      }
+      .btn-index:active {
+        transform: scale(0.98);
+      }
+      .btn-index:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+      }
+
+      /* ── COLLAPSIBLE FILE LIST ── */
+      .collapse-section {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+      .collapse-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 9px 12px;
+        cursor: pointer;
+        background: var(--bg);
+        user-select: none;
+        transition: background 0.15s;
+      }
+      .collapse-header:hover {
+        background: #161820;
+      }
+      .collapse-header-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 11px;
+        color: var(--muted);
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+      }
+      .collapse-header-left .badge {
+        background: var(--accent);
+        color: #0d0f14;
+        font-size: 10px;
+        font-weight: 700;
+        border-radius: 10px;
+        padding: 1px 7px;
+        line-height: 1.6;
+      }
+      .collapse-arrow {
+        font-size: 10px;
+        color: var(--muted);
+        transition: transform 0.2s;
+      }
+      .collapse-arrow.open {
+        transform: rotate(180deg);
+      }
+
+      .collapse-body {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+      }
+      .collapse-body.open {
+        max-height: 300px;
+        overflow-y: auto;
+      }
+      .collapse-body::-webkit-scrollbar {
+        width: 3px;
+      }
+      .collapse-body::-webkit-scrollbar-thumb {
+        background: var(--border);
+      }
+
+      .file-item {
+        background: var(--surface);
+        border-top: 1px solid var(--border);
+        padding: 7px 12px;
+        font-size: 11px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        animation: slideIn 0.2s ease;
+      }
+      .file-item .fi-icon {
+        color: var(--accent2);
+        flex-shrink: 0;
+      }
+      .file-item .fi-name {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: var(--text);
+      }
+      .file-item .fi-size {
+        color: var(--muted);
+        font-size: 10px;
+        flex-shrink: 0;
+      }
+      .file-item.indexed .fi-icon {
+        color: var(--accent);
+      }
+      .file-item .fi-remove {
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 12px;
+        flex-shrink: 0;
+        line-height: 1;
+        padding: 2px 4px;
+        border-radius: 3px;
+        transition:
+          color 0.15s,
+          background 0.15s;
+      }
+      .file-item .fi-remove:hover {
+        color: var(--danger);
+        background: rgba(248, 113, 113, 0.1);
+      }
+
+      /* ── MODEL SELECTOR ── */
+      .model-selector {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+      .model-selector-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 9px 12px;
+        background: var(--bg);
+        font-size: 11px;
+        color: var(--muted);
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        cursor: pointer;
+        user-select: none;
+        transition: background 0.15s;
+      }
+      .model-selector-header:hover {
+        background: #161820;
+      }
+      .model-selector-header .ms-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .model-selector-body {
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        border-top: 1px solid var(--border);
+        background: var(--surface);
+      }
+      .model-tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px;
+        background: var(--bg);
+        border-radius: 6px;
+        padding: 3px;
+      }
+      .model-tab {
+        padding: 5px;
+        border-radius: 4px;
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          color 0.15s;
+        color: var(--muted);
+        background: transparent;
+      }
+      .model-tab.active {
+        background: var(--surface);
+        color: var(--text);
+      }
+      .model-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .model-group label {
+        font-size: 10px;
+        color: var(--muted);
+        letter-spacing: 0.5px;
+      }
+      .model-select {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--text);
+        font-family: var(--mono);
+        font-size: 11px;
+        padding: 6px 8px;
+        outline: none;
+        width: 100%;
+        cursor: pointer;
+        transition: border-color 0.15s;
+      }
+      .model-select:focus {
+        border-color: var(--accent);
+      }
+      .model-input {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--text);
+        font-family: var(--mono);
+        font-size: 11px;
+        padding: 6px 8px;
+        outline: none;
+        width: 100%;
+        transition: border-color 0.15s;
+      }
+      .model-input:focus {
+        border-color: var(--accent);
+      }
+      .model-input::placeholder {
+        color: var(--muted);
+      }
+      .btn-apply {
+        background: transparent;
+        border: 1px solid var(--accent);
+        border-radius: 6px;
+        color: var(--accent);
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 700;
+        padding: 6px;
+        cursor: pointer;
+        transition: background 0.15s;
+        width: 100%;
+      }
+      .btn-apply:hover {
+        background: rgba(93, 230, 160, 0.08);
+      }
+      .btn-apply:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      .model-status {
+        font-size: 10px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        text-align: center;
+        display: none;
+      }
+      .model-status.ok {
+        display: block;
+        background: rgba(93, 230, 160, 0.1);
+        color: var(--accent);
+      }
+      .model-status.err {
+        display: block;
+        background: rgba(248, 113, 113, 0.1);
+        color: var(--danger);
+      }
+
+      /* ── QDRANT LINK ── */
+      .qdrant-link {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 12px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        text-decoration: none;
+        color: var(--muted);
+        font-size: 11px;
+        transition:
+          border-color 0.2s,
+          color 0.2s,
+          background 0.2s;
+        flex-shrink: 0;
+      }
+      .qdrant-link:hover {
+        border-color: var(--accent2);
+        color: var(--accent2);
+        background: rgba(59, 130, 246, 0.05);
+      }
+      .qdrant-link .ql-icon {
+        font-size: 14px;
+      }
+      .qdrant-link .ql-text {
+        flex: 1;
+      }
+      .qdrant-link .ql-arrow {
+        font-size: 10px;
+        opacity: 0.6;
+      }
+
+      /* ── CHAT AREA ── */
+      main {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .chat-header {
+        border-bottom: 1px solid var(--border);
+        padding: 14px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: var(--surface);
+      }
+      .chat-header h2 {
+        font-family: var(--sans);
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text);
+      }
+      .chat-header .meta {
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        scroll-behavior: smooth;
+      }
+      .messages::-webkit-scrollbar {
+        width: 4px;
+      }
+      .messages::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .messages::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 4px;
+      }
+
+      .msg {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        max-width: 78%;
+        animation: fadeUp 0.25s ease;
+      }
+      .msg.user {
+        align-self: flex-end;
+        align-items: flex-end;
+      }
+      .msg.bot {
+        align-self: flex-start;
+      }
+
+      .msg-label {
+        font-size: 10px;
+        color: var(--muted);
+        letter-spacing: 0.5px;
+      }
+
+      .bubble {
+        padding: 12px 16px;
+        border-radius: 10px;
+        font-size: 13px;
+        line-height: 1.7;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .msg.user .bubble {
+        background: var(--user-bubble);
+        border: 1px solid rgba(59, 130, 246, 0.25);
+        color: #a8c4f0;
+        border-bottom-right-radius: 3px;
+      }
+      .msg.bot .bubble {
+        background: var(--bot-bubble);
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-bottom-left-radius: 3px;
+      }
+
+      .typing-bubble {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+        padding: 14px 18px;
+      }
+      .typing-bubble span {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--muted);
+        animation: bounce 1.2s infinite;
+      }
+      .typing-bubble span:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .typing-bubble span:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+
+      .empty-state {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        color: var(--muted);
+        text-align: center;
+        animation: fadeIn 0.4s ease;
+      }
+      .empty-state .big {
+        font-size: 40px;
+      }
+      .empty-state p {
+        font-size: 12px;
+        line-height: 1.8;
+      }
+
+      /* ── INPUT ── */
+      .chat-input-area {
+        border-top: 1px solid var(--border);
+        padding: 14px 24px;
+        display: flex;
+        gap: 10px;
+        background: var(--surface);
+      }
+      .input-wrap {
+        flex: 1;
+        position: relative;
+      }
+      textarea {
+        width: 100%;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--text);
+        font-family: var(--mono);
+        font-size: 13px;
+        padding: 11px 14px;
+        resize: none;
+        outline: none;
+        min-height: 44px;
+        max-height: 120px;
+        transition: border-color 0.2s;
+        line-height: 1.5;
+        display: block;
+      }
+      textarea:focus {
+        border-color: var(--accent);
+      }
+      textarea::placeholder {
+        color: var(--muted);
+      }
+
+      .btn-send {
+        background: var(--accent);
+        border: none;
+        border-radius: 8px;
+        width: 44px;
+        height: 44px;
+        flex-shrink: 0;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #0d0f14;
+        font-size: 18px;
+        transition:
+          opacity 0.2s,
+          transform 0.1s;
+        align-self: flex-start;
+      }
+      .btn-send:hover {
+        opacity: 0.85;
+      }
+      .btn-send:active {
+        transform: scale(0.93);
+      }
+      .btn-send:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+
+      /* ── ANIMATIONS ── */
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateX(-8px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      @keyframes bounce {
+        0%,
+        80%,
+        100% {
+          transform: scale(0.8);
+          opacity: 0.4;
+        }
+        40% {
+          transform: scale(1.2);
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <aside>
+      <div class="logo">☘ <span>RAG</span>Chatbot</div>
+
+      <div class="upload-zone" id="dropZone">
+        <input type="file" id="fileInput" multiple accept=".pdf" />
+        <div class="upload-icon">📂</div>
+        <div class="upload-label">
+          Kéo thả hoặc <strong>chọn file PDF</strong><br />hỗ trợ nhiều file
+          cùng lúc
+        </div>
+      </div>
+
+      <button class="btn-index" id="btnIndex" disabled>⚡ Load File</button>
+
+      <div class="collapse-section" id="collapseSection" style="display: none">
+        <div class="collapse-header" id="collapseHeader">
+          <div class="collapse-header-left">
+            📄 Files đã chọn
+            <span class="badge" id="fileBadge">0</span>
+          </div>
+          <span class="collapse-arrow" id="collapseArrow">▼</span>
+        </div>
+        <div class="collapse-body" id="collapseBody"></div>
+      </div>
+
+      <div class="collapse-section" id="serverFilesSection">
+        <div class="collapse-header" id="serverFilesHeader">
+          <div class="collapse-header-left">🗄️ File đã lưu</div>
+          <span class="collapse-arrow" id="serverFilesArrow">▼</span>
+        </div>
+        <div class="collapse-body" id="serverFilesBody">
+          <div
+            style="
+              padding: 10px;
+              font-size: 11px;
+              color: var(--muted);
+              text-align: center;
+            "
+          >
+            Đang tải...
+          </div>
+        </div>
+      </div>
+
+      <!-- Model Selector -->
+      <div class="model-selector">
+        <div class="model-selector-header" id="modelSelectorHeader">
+          <div class="ms-left">
+            🤖 <span id="modelHeaderLabel">Model: đang tải...</span>
+          </div>
+          <span class="collapse-arrow open" id="modelArrow">▼</span>
+        </div>
+        <div class="model-selector-body" id="modelSelectorBody">
+          <div class="model-tabs">
+            <button
+              class="model-tab active"
+              id="tabLMS"
+              onclick="switchTab('lmstudio')"
+            >
+              🖥 LMStudio
+            </button>
+            <button
+              class="model-tab"
+              id="tabGemini"
+              onclick="switchTab('gemini')"
+            >
+              ✨ Gemini
+            </button>
+            <button class="model-tab" id="tabQwen" onclick="switchTab('qwen')">
+              🐉 Qwen
+            </button>
+          </div>
+          <div id="panelLMS" class="model-group">
+            <label>Tên model (LM Studio)</label>
+            <input
+              class="model-input"
+              id="lmsModelInput"
+              type="text"
+              placeholder="nvidia/nemotron-3-nano-4b"
+              value="nvidia/nemotron-3-nano-4b"
+            />
+          </div>
+          <div id="panelGemini" class="model-group" style="display: none">
+            <label>Chọn model Gemini</label>
+            <select class="model-select" id="geminiModelSelect">
+              <option value="gemini-3-flash-preview">
+                gemini-3-flash-preview
+              </option>
+              <option value="gemini-3.1-pro-preview">
+                gemini-3.1-pro-preview
+              </option>
+              <option value="gemini-3.1-flash-lite-preview">
+                gemini-3.1-flash-lite-preview
+              </option>
+            </select>
+          </div>
+          <div id="panelQwen" class="model-group" style="display: none">
+            <label>Chọn model Qwen</label>
+            <select class="model-select" id="qwenModelSelect">
+              <option value="qwen-plus" selected>qwen-plus</option>
+              <option value="qwen-max">qwen-max</option>
+              <option value="qwen-turbo">qwen-turbo</option>
+              <option value="qwen3-vl-235b-a22b-thinking">
+                qwen3-vl-235b-a22b-thinking
+              </option>
+            </select>
+          </div>
+          <button class="btn-apply" id="btnApplyModel" onclick="applyModel()">
+            Áp dụng
+          </button>
+          <div class="model-status" id="modelStatus"></div>
+        </div>
+      </div>
+
+      <a
+        class="qdrant-link"
+        href="http://localhost:6333/dashboard#/collections"
+        target="_blank"
+        rel="noopener"
+      >
+        <span class="ql-icon">🗄️</span>
+        <span class="ql-text">Qdrant Dashboard</span>
+        <span class="ql-arrow">↗</span>
+      </a>
+    </aside>
+
+    <main>
+      <div class="chat-header">
+        <h2>💬 Chat với Local LLM</h2>
+      </div>
+
+      <div class="messages" id="messages"></div>
+
+      <div class="chat-input-area">
+        <div class="input-wrap">
+          <textarea
+            id="questionInput"
+            placeholder="Hỏi gì đó về tài liệu..."
+            rows="1"
+          ></textarea>
+        </div>
+        <button class="btn-send" id="btnSend">➤</button>
+      </div>
+    </main>
+
+    <script>
+      const fileInput = document.getElementById("fileInput");
+      const dropZone = document.getElementById("dropZone");
+      const btnIndex = document.getElementById("btnIndex");
+      const btnSend = document.getElementById("btnSend");
+      const collapseSection = document.getElementById("collapseSection");
+      const collapseHeader = document.getElementById("collapseHeader");
+      const collapseBody = document.getElementById("collapseBody");
+      const collapseArrow = document.getElementById("collapseArrow");
+      const fileBadge = document.getElementById("fileBadge");
+      const messages = document.getElementById("messages");
+      const questionInput = document.getElementById("questionInput");
+
+      // Elements cho phần Server Files
+      const serverFilesHeader = document.getElementById("serverFilesHeader");
+      const serverFilesBody = document.getElementById("serverFilesBody");
+      const serverFilesArrow = document.getElementById("serverFilesArrow");
+
+      let selectedFiles = [];
+      let collapseOpen = false;
+      let serverFilesOpen = false;
+
+      // ── COLLAPSE TOGGLE UPLOADED FILES ──
+      collapseHeader.addEventListener("click", () => {
+        collapseOpen = !collapseOpen;
+        collapseBody.classList.toggle("open", collapseOpen);
+        collapseArrow.classList.toggle("open", collapseOpen);
+      });
+
+      // ── COLLAPSE TOGGLE SERVER FILES ──
+      serverFilesHeader.addEventListener("click", async () => {
+        serverFilesOpen = !serverFilesOpen;
+        serverFilesBody.classList.toggle("open", serverFilesOpen);
+        serverFilesArrow.classList.toggle("open", serverFilesOpen);
+
+        // Fetch danh sách file từ backend khi được mở
+        if (serverFilesOpen) {
+          serverFilesBody.innerHTML =
+            '<div style="padding: 10px; font-size: 11px; color: var(--muted); text-align: center;">Đang tải...</div>';
+          try {
+            // YÊU CẦU BACKEND CỦA BẠN PHẢI CÓ ENDPOINT NÀY
+            const res = await fetch("/list-files");
+            const data = await res.json();
+
+            serverFilesBody.innerHTML = "";
+            if (data.files && data.files.length > 0) {
+              data.files.forEach((file) => {
+                const el = document.createElement("div");
+                el.className = "file-item";
+                el.innerHTML = `
+                  <span class="fi-icon">📄</span>
+                  <span class="fi-name" title="${file}">${file}</span>`;
+                serverFilesBody.appendChild(el);
+              });
+            } else {
+              serverFilesBody.innerHTML =
+                '<div style="padding: 10px; font-size: 11px; color: var(--muted); text-align: center;">Không có file nào trong thư mục</div>';
+            }
+          } catch (e) {
+            serverFilesBody.innerHTML =
+              '<div style="padding: 10px; font-size: 11px; color: var(--danger); text-align: center;">Lỗi không thể tải danh sách</div>';
+          }
+        }
+      });
+
+      // ── FILE SELECT ──
+      fileInput.addEventListener("change", () =>
+        handleFiles([...fileInput.files]),
+      );
+
+      dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("drag");
+      });
+      dropZone.addEventListener("dragleave", () =>
+        dropZone.classList.remove("drag"),
+      );
+      dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("drag");
+        handleFiles(
+          [...e.dataTransfer.files].filter((f) => f.name.endsWith(".pdf")),
+        );
+      });
+
+      function handleFiles(files) {
+        const existing = new Set(selectedFiles.map((f) => f.name));
+        files.forEach((f) => {
+          if (!existing.has(f.name)) selectedFiles.push(f);
+        });
+        renderFileList();
+        btnIndex.disabled = selectedFiles.length === 0;
+        if (selectedFiles.length > 0) {
+          collapseSection.style.display = "block";
+          if (!collapseOpen) {
+            collapseOpen = true;
+            collapseBody.classList.add("open");
+            collapseArrow.classList.add("open");
+          }
+        } else {
+          collapseSection.style.display = "none";
+        }
+      }
+
+      function renderFileList() {
+        collapseBody.innerHTML = "";
+        fileBadge.textContent = selectedFiles.length;
+        selectedFiles.forEach((f, i) => {
+          const el = document.createElement("div");
+          el.className = "file-item";
+          el.innerHTML = `
+            <span class="fi-icon">📄</span>
+            <span class="fi-name" title="${f.name}">${f.name}</span>
+            <span class="fi-size">${(f.size / 1024).toFixed(0)}KB</span>
+            <span class="fi-remove" data-idx="${i}" title="Xóa">✕</span>`;
+          collapseBody.appendChild(el);
+        });
+        collapseBody.querySelectorAll(".fi-remove").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            const idx = parseInt(e.target.dataset.idx);
+            selectedFiles.splice(idx, 1);
+            handleFiles([]);
+          });
+        });
+      }
+
+      // ── INDEX ──
+      btnIndex.addEventListener("click", async () => {
+        if (!selectedFiles.length) return;
+
+        btnIndex.disabled = true;
+        btnIndex.textContent = "⏳ Đang xử lý...";
+
+        const form = new FormData();
+        selectedFiles.forEach((f) => form.append("files", f));
+
+        try {
+          const res = await fetch("/upload", { method: "POST", body: form });
+          const data = await res.json();
+
+          if (res.ok) {
+            appendBot(
+              "Đã xong! Bạn có thể hỏi tôi về nội dung trong các tài liệu vừa upload. 📚",
+            );
+            // Tùy chọn: Xóa danh sách file sau khi upload thành công
+            // selectedFiles = []; handleFiles([]);
+          } else {
+            appendBot("❌ Lỗi: " + (data.error || "Không thể index"));
+          }
+        } catch {
+          appendBot("❌ Lỗi: Không kết nối được server");
+        }
+
+        btnIndex.disabled = false;
+        btnIndex.textContent = "⚡ Load File";
+      });
+
+      // ── CHAT ──
+      btnSend.addEventListener("click", sendQuestion);
+      questionInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          sendQuestion();
+        }
+      });
+      questionInput.addEventListener("input", () => {
+        questionInput.style.height = "auto";
+        questionInput.style.height =
+          Math.min(questionInput.scrollHeight, 120) + "px";
+      });
+
+      async function sendQuestion() {
+        const q = questionInput.value.trim();
+        if (!q) return;
+
+        appendUser(q);
+        questionInput.value = "";
+        questionInput.style.height = "auto";
+        btnSend.disabled = true;
+
+        const typing = appendTyping();
+
+        try {
+          const res = await fetch("/ask", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question: q }),
+          });
+          const data = await res.json();
+          typing.remove();
+          appendBot(
+            res.ok ? data.answer : "⚠️ " + (data.error || "Lỗi không xác định"),
+          );
+        } catch {
+          typing.remove();
+          appendBot("⚠️ Không kết nối được server.");
+        }
+        btnSend.disabled = false;
+      }
+
+      function appendUser(text) {
+        const div = document.createElement("div");
+        div.className = "msg user";
+        div.innerHTML = `<div class="msg-label">Bạn</div><div class="bubble">${esc(text)}</div>`;
+        messages.appendChild(div);
+        scrollBottom();
+      }
+
+      function appendBot(text) {
+        const div = document.createElement("div");
+        div.className = "msg bot";
+        div.innerHTML = `<div class="msg-label">🤖 Bot</div><div class="bubble">${esc(text)}</div>`;
+        messages.appendChild(div);
+        scrollBottom();
+      }
+
+      function appendTyping() {
+        const div = document.createElement("div");
+        div.className = "msg bot";
+        div.innerHTML = `<div class="msg-label">🤖 Bot</div>
+      <div class="bubble bot typing-bubble"><span></span><span></span><span></span></div>`;
+        messages.appendChild(div);
+        scrollBottom();
+        return div;
+      }
+
+      function scrollBottom() {
+        messages.scrollTop = messages.scrollHeight;
+      }
+
+      function esc(s) {
+        return s
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\n/g, "<br/>");
+      }
+
+      // ── MODEL SELECTOR ──
+      let activeTab = "lmstudio";
+      let modelBodyOpen = true;
+
+      document
+        .getElementById("modelSelectorHeader")
+        .addEventListener("click", () => {
+          modelBodyOpen = !modelBodyOpen;
+          document.getElementById("modelSelectorBody").style.display =
+            modelBodyOpen ? "" : "none";
+          document
+            .getElementById("modelArrow")
+            .classList.toggle("open", modelBodyOpen);
+        });
+
+      function switchTab(tab) {
+        activeTab = tab;
+        document
+          .getElementById("tabLMS")
+          .classList.toggle("active", tab === "lmstudio");
+        document
+          .getElementById("tabGemini")
+          .classList.toggle("active", tab === "gemini");
+        document
+          .getElementById("tabQwen")
+          .classList.toggle("active", tab === "qwen");
+        document.getElementById("panelLMS").style.display =
+          tab === "lmstudio" ? "" : "none";
+        document.getElementById("panelGemini").style.display =
+          tab === "gemini" ? "" : "none";
+        document.getElementById("panelQwen").style.display =
+          tab === "qwen" ? "" : "none";
+
+        document.getElementById("modelStatus").className = "model-status";
+      }
+
+      async function applyModel() {
+        const btn = document.getElementById("btnApplyModel");
+        const statusEl = document.getElementById("modelStatus");
+
+        // Sửa đoạn lấy giá trị model tại đây
+        let model = "";
+        if (activeTab === "lmstudio") {
+          model = document.getElementById("lmsModelInput").value.trim();
+        } else if (activeTab === "gemini") {
+          model = document.getElementById("geminiModelSelect").value;
+        } else if (activeTab === "qwen") {
+          model = document.getElementById("qwenModelSelect").value;
+        }
+
+        if (!model) return;
+        btn.disabled = true;
+        btn.textContent = "⏳ Đang kết nối...";
+        statusEl.className = "model-status";
+
+        try {
+          const res = await fetch("/set-model", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ type: activeTab, model }),
+          });
+          const data = await res.json();
+          if (res.ok) {
+            statusEl.className = "model-status ok";
+            statusEl.textContent = "✅ Đã áp dụng!";
+            updateModelHeader(activeTab, model);
+            appendBot(
+              `Đã chuyển sang model **${model}** (${activeTab}). Sẵn sàng trả lời! 🤖`,
+            );
+          } else {
+            statusEl.className = "model-status err";
+            statusEl.textContent = "❌ " + (data.error || "Lỗi không xác định");
+          }
+        } catch {
+          statusEl.className = "model-status err";
+          statusEl.textContent = "❌ Không kết nối được server";
+        }
+        btn.disabled = false;
+        btn.textContent = "Áp dụng";
+      }
+
+      function updateModelHeader(type, model) {
+        const short = model.length > 22 ? model.slice(0, 20) + "…" : model;
+        let icon = "🖥";
+        if (type === "gemini") icon = "✨";
+        if (type === "qwen") icon = "🐉";
+
+        document.getElementById("modelHeaderLabel").textContent =
+          `${icon} ${short}`;
+      }
+
+      // Load current model on page load
+      (async () => {
+        try {
+          const res = await fetch("/current-model");
+          const data = await res.json();
+          if (data.type) {
+            activeTab = data.type;
+            switchTab(data.type);
+            updateModelHeader(data.type, data.model);
+
+            // Thêm logic gán value cho Qwen tại đây
+            if (data.type === "lmstudio") {
+              document.getElementById("lmsModelInput").value = data.model;
+            } else if (data.type === "gemini") {
+              document.getElementById("geminiModelSelect").value = data.model;
+            } else if (data.type === "qwen") {
+              document.getElementById("qwenModelSelect").value = data.model;
+            }
+          }
+        } catch {}
+      })();
+    </script>
+  </body>
+</html>
