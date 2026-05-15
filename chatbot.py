@@ -33,23 +33,22 @@ class LMStudioBackend:
         return _clean(str(self.llm.respond(prompt)))
 
 
-class GeminiBackend:
-    label = "gemini"
+# class GeminiBackend:
+#     label = "gemini"
 
-    MODELS = {
-        "gemini-3-flash-preview": "gemini-3-flash-preview",
-        "gemini-3.1-pro-preview":   "gemini-3.1-pro-preview",
-        "gemini-3.1-flash-lite-preview":   "gemini-3.1-flash-lite-preview",
-        "qwen3-vl-235b-a22b-thinking": "qwen3-vl-235b-a22b-thinking",
-    }
+#     MODELS = {
+#         "gemini-3-flash-preview": "gemini-3-flash-preview",
+#         "gemini-3.1-pro-preview":   "gemini-3.1-pro-preview",
+#         "gemini-3.1-flash-lite-preview":   "gemini-3.1-flash-lite-preview",
+#     }
 
-    def __init__(self, model_key: str = "gemini-3-flash-preview"):
-        from google import genai
-        api_key = os.environ.get("GEMINI_API_KEY", "")
-        if not api_key:
-            raise RuntimeError("GEMINI_API_KEY chưa được cấu hình trong .env")
-        self.client = genai.Client(api_key=api_key)
-        self.model_name = self.MODELS.get(model_key, model_key)
+#     def __init__(self, model_key: str = "gemini-3-flash-preview"):
+#         from google import genai
+#         api_key = os.environ.get("GEMINI_API_KEY", "")
+#         if not api_key:
+#             raise RuntimeError("GEMINI_API_KEY chưa được cấu hình trong .env")
+#         self.client = genai.Client(api_key=api_key)
+#         self.model_name = self.MODELS.get(model_key, model_key)
 
 
 class QwenBackend:

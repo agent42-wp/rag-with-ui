@@ -72,13 +72,13 @@
             >
               🖥 LMStudio
             </button>
-            <button
+            <!-- <button
               class="model-tab"
               id="tabGemini"
               onclick="switchTab('gemini')"
             >
               ✨ Gemini
-            </button>
+            </button> -->
             <button class="model-tab" id="tabQwen" onclick="switchTab('qwen')">
               🐉 Qwen
             </button>
@@ -89,11 +89,11 @@
               class="model-input"
               id="lmsModelInput"
               type="text"
-              placeholder="nvidia/nemotron-3-nano-4b"
-              value="nvidia/nemotron-3-nano-4b"
+              placeholder="google/gemma-4-e2b"
+              value="google/gemma-4-e2b"
             />
           </div>
-          <div id="panelGemini" class="model-group" style="display: none">
+          <!-- <div id="panelGemini" class="model-group" style="display: none">
             <label>Chọn model Gemini</label>
             <select class="model-select" id="geminiModelSelect">
               <option value="gemini-3-flash-preview">
@@ -106,7 +106,7 @@
                 gemini-3.1-flash-lite-preview
               </option>
             </select>
-          </div>
+          </div> -->
           <div id="panelQwen" class="model-group" style="display: none">
             <label>Chọn model Qwen</label>
             <select class="model-select" id="qwenModelSelect">
@@ -410,16 +410,16 @@
         document
           .getElementById("tabLMS")
           .classList.toggle("active", tab === "lmstudio");
-        document
-          .getElementById("tabGemini")
-          .classList.toggle("active", tab === "gemini");
+        //        document
+        //          .getElementById("tabGemini")
+        //          .classList.toggle("active", tab === "gemini");
         document
           .getElementById("tabQwen")
           .classList.toggle("active", tab === "qwen");
         document.getElementById("panelLMS").style.display =
           tab === "lmstudio" ? "" : "none";
-        document.getElementById("panelGemini").style.display =
-          tab === "gemini" ? "" : "none";
+        //        document.getElementById("panelGemini").style.display =
+        //          tab === "gemini" ? "" : "none";
         document.getElementById("panelQwen").style.display =
           tab === "qwen" ? "" : "none";
         document.getElementById("modelStatus").className = "model-status";
@@ -432,9 +432,11 @@
         let model = "";
         if (activeTab === "lmstudio") {
           model = document.getElementById("lmsModelInput").value.trim();
-        } else if (activeTab === "gemini") {
-          model = document.getElementById("geminiModelSelect").value;
-        } else if (activeTab === "qwen") {
+        }
+        //        else if (activeTab === "gemini") {
+        //         model = document.getElementById("geminiModelSelect").value;
+        //       }
+        else if (activeTab === "qwen") {
           model = document.getElementById("qwenModelSelect").value;
         }
 
@@ -472,7 +474,7 @@
       function updateModelHeader(type, model) {
         const short = model.length > 22 ? model.slice(0, 20) + "…" : model;
         let icon = "🖥";
-        if (type === "gemini") icon = "✨";
+        //       if (type === "gemini") icon = "✨";
         if (type === "qwen") icon = "🐉";
         document.getElementById("modelHeaderLabel").textContent =
           `${icon} ${short}`;
@@ -490,9 +492,11 @@
 
             if (data.type === "lmstudio") {
               document.getElementById("lmsModelInput").value = data.model;
-            } else if (data.type === "gemini") {
-              document.getElementById("geminiModelSelect").value = data.model;
-            } else if (data.type === "qwen") {
+            }
+            // else if (data.type === "gemini") {
+            //   document.getElementById("geminiModelSelect").value = data.model;
+            // }
+            else if (data.type === "qwen") {
               document.getElementById("qwenModelSelect").value = data.model;
             }
           }

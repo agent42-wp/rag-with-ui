@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 from embedder import VectorStore
 from retriever import Retriever
-from chatbot import Chatbot, LMStudioBackend, GeminiBackend, QwenBackend
+from chatbot import Chatbot, LMStudioBackend, QwenBackend
 
 load_dotenv()
 
@@ -18,7 +18,7 @@ QDRANT_URL = "http://localhost:6333"
 COLLECTION_NAME = "PDF_collection"
 VECTOR_SIZE = 1024
 EMBED_MODEL = "text-embedding-qwen3-0.6b-text-embedding"
-LMS_MODEL = "nvidia/nemotron-3-nano-4b"
+LMS_MODEL = "google/gemma-4-e2b"
 UPLOAD_DIR = "./uploaded_pdfs"
 
 Path(UPLOAD_DIR).mkdir(exist_ok=True)
@@ -87,8 +87,8 @@ def set_model(req: SetModelRequest):
     try:
         if req.type == "lmstudio":
             backend = LMStudioBackend(req.model)
-        elif req.type == "gemini":
-            backend = GeminiBackend(req.model)
+        # elif req.type == "gemini":
+        #     backend = GeminiBackend(req.model)
         elif req.type == "qwen":
             backend = QwenBackend(req.model)
         else:
