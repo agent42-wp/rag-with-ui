@@ -267,14 +267,6 @@ Tham số truy xuất có thể điều chỉnh trong `retriever.py → retrieve
 Hệ thống dùng một template prompt nghiêm ngặt, tập trung vào trích dẫn (định nghĩa trong `chatbot.py`):
 
 ```
-You are a strict, citation-focused assistant for a private knowledge base.
-RULES:
-1. Use ONLY the provided content to answer.
-2. If the answer is not clearly contained in the content, say:
-   "I don't know based on the provided documents."
-3. Do NOT use outside knowledge, guessing, or web information.
-4. If applicable, cite source as (source:page) using the metadata.
-
 Content:
 [các đoạn truy xuất kèm metadata source/page]
 
@@ -292,12 +284,6 @@ Thiết kế này đảm bảo model không hallucinate và luôn truy nguyên c
 **Thay đổi model embedding** — Cập nhật `EMBED_MODEL` và `VECTOR_SIZE` trong `main.py`. Hãy lập chỉ mục lại toàn bộ tài liệu sau khi thay model vì các vector cũ sẽ không tương thích.
 
 **Hỗ trợ loại tài liệu khác** — `DirectoryLoader` hỗ trợ mọi định dạng mà Unstructured có thể parse (DOCX, HTML, TXT, v.v.). Thay đổi pattern `glob` trong `embedder.py → _load_docs()`.
-
----
-
-## Giấy phép
-
-Dự án này là mã nguồn mở. Xem chi tiết giấy phép trong repository.
 
 ---
 
