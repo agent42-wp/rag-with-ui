@@ -33,6 +33,37 @@ rag-with-ui/
 
 ## 🔄 Luồng hoạt động (Workflow)
 
+```mermaid
+flowchart TD
+    subgraph PHASE1["📥 Giai đoạn 1 — Lập chỉ mục"]
+        A([👤 Người dùng]) -->|Tải lên PDF| B[POST /upload]
+        B --> C[DirectoryLoader\nLangChain + Unstructured]
+        C --> D[RecursiveCharacterTextSplitter\n1200 ký tự · overlap 200]
+        D --> E[Embedding Model\nQwen3-0.6b · 1024 chiều]
+        E --> F[(Qdrant\nPDF_collection)]
+    end
+
+    subgraph PHASE2["💬 Giai đoạn 2 — Truy vấn"]
+        G([👤 Người dùng]) -->|Đặt câu hỏi| H[POST /ask]
+        H --> I[Embedding Model\nQwen3-0.6b · 1024 chiều]
+        I -->|Vector câu hỏi| J[(Qdrant\nCosine Search · top-5 · score ≥ 0.2)]
+        J -->|Các đoạn liên quan + metadata| K[Xây dựng Context\nsource · page]
+        K --> L{LLM Backend}
+        L -->|lmstudio| M[LM Studio\nGemma / GGUF]
+        L -->|qwen| N[Qwen DashScope\nqwen-plus / max / turbo]
+        M --> O([✅ Câu trả lời có trích dẫn])
+        N --> O
+    end
+
+    F -.->|Vector index| J
+
+    subgraph API["⚙️ Quản lý Runtime"]
+        P[POST /set-model] -->|Chuyển backend| L
+        Q[GET /list-files] --> R[Danh sách PDF]
+        S[GET /current-model] --> T[Backend đang dùng]
+    end
+```
+
 ### Giai đoạn 1 — Lập chỉ mục (Nhập tài liệu)
 
 Khi người dùng tải lên PDF qua giao diện hoặc gọi `POST /upload`:
@@ -283,3 +314,4 @@ Xây dựng với [FastAPI](https://fastapi.tiangolo.com/), [LangChain](https://
 **Docker Get Started:** [https://docs.docker.com/get-started/](https://docs.docker.com/get-started/)
 
 **Get started with LM Studio:** [https://lmstudio.ai/docs/app/basics](https://lmstudio.ai/docs/app/basics)
+
