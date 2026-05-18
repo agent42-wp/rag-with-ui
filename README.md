@@ -56,16 +56,16 @@ Khi người dùng gửi câu hỏi qua giao diện hoặc gọi `POST /ask`:
 
 ## 🛠️ Công nghệ sử dụng
 
-| Thành phần | Công nghệ |
-|---|---|
-| Web Framework | FastAPI + Uvicorn |
-| Cơ sở dữ liệu Vector | Qdrant (cục bộ, `http://localhost:6333`) |
-| Nhúng vector | LM Studio SDK (`lmstudio`) |
-| Đọc tài liệu | LangChain Community + Unstructured |
-| Chia văn bản | LangChain `RecursiveCharacterTextSplitter` |
-| LLM (cục bộ) | LM Studio — bất kỳ model GGUF nào (mặc định: `google/gemma-4-e2b`) |
-| LLM (đám mây) | Qwen qua DashScope (qwen-plus, qwen-max, qwen-turbo) |
-| Frontend | Vanilla HTML / CSS / JS |
+| Thành phần           | Công nghệ                                                          |
+| -------------------- | ------------------------------------------------------------------ |
+| Web Framework        | FastAPI + Uvicorn                                                  |
+| Cơ sở dữ liệu Vector | Qdrant (cục bộ, `http://localhost:6333`)                           |
+| Nhúng vector         | LM Studio SDK (`lmstudio`)                                         |
+| Đọc tài liệu         | LangChain Community + Unstructured                                 |
+| Chia văn bản         | LangChain `RecursiveCharacterTextSplitter`                         |
+| LLM (cục bộ)         | LM Studio — bất kỳ model GGUF nào (mặc định: `google/gemma-4-e2b`) |
+| LLM (đám mây)        | Qwen qua DashScope (qwen-plus, qwen-max, qwen-turbo)               |
+| Frontend             | Vanilla HTML / CSS / JS                                            |
 
 ---
 
@@ -135,38 +135,47 @@ python main.py
 ## 📡 Tài liệu API
 
 ### `GET /`
+
 Trả về giao diện web (`ui/index.html`).
 
 ### `GET /list-files`
+
 Liệt kê tất cả file PDF hiện có trong thư mục upload.
 
 **Phản hồi:**
+
 ```json
 { "files": ["report.pdf", "manual.pdf"] }
 ```
 
 ### `GET /current-model`
+
 Trả về backend LLM và tên model đang hoạt động.
 
 **Phản hồi:**
+
 ```json
 { "type": "lmstudio", "model": "google/gemma-4-e2b" }
 ```
 
 ### `POST /upload`
+
 Tải lên một hoặc nhiều file PDF. Kích hoạt lập chỉ mục tự động vào Qdrant.
 
 **Body:** `multipart/form-data` với một hoặc nhiều trường `files`.
 
 **Phản hồi:**
+
 ```json
 { "status": "ok", "indexed": ["report.pdf"] }
 ```
 
 ### `POST /set-model`
+
 Chuyển đổi backend LLM đang hoạt động mà không cần khởi động lại.
 
 **Body:**
+
 ```json
 { "type": "lmstudio", "model": "google/gemma-4-e2b" }
 ```
@@ -174,16 +183,21 @@ Chuyển đổi backend LLM đang hoạt động mà không cần khởi động
 Các loại được hỗ trợ: `"lmstudio"`, `"qwen"`. Với Qwen, các model hợp lệ là `qwen-plus`, `qwen-max`, `qwen-turbo`.
 
 ### `POST /ask`
+
 Gửi câu hỏi và nhận câu trả lời có căn cứ từ pipeline RAG.
 
 **Body:**
+
 ```json
 { "question": "Chính sách hoàn tiền được mô tả trong tài liệu là gì?" }
 ```
 
 **Phản hồi:**
+
 ```json
-{ "answer": "Theo tài liệu (source:manual.pdf | page:3), yêu cầu hoàn tiền phải được gửi trong vòng 30 ngày..." }
+{
+  "answer": "Theo tài liệu (source:manual.pdf | page:3), yêu cầu hoàn tiền phải được gửi trong vòng 30 ngày..."
+}
 ```
 
 ---
@@ -192,28 +206,28 @@ Gửi câu hỏi và nhận câu trả lời có căn cứ từ pipeline RAG.
 
 Các hằng số quan trọng trong `main.py` có thể điều chỉnh cho phù hợp:
 
-| Hằng số | Mặc định | Mô tả |
-|---|---|---|
-| `QDRANT_URL` | `http://localhost:6333` | URL của Qdrant server |
-| `COLLECTION_NAME` | `PDF_collection` | Tên collection trong Qdrant |
-| `VECTOR_SIZE` | `1024` | Phải khớp với số chiều đầu ra của model embedding |
-| `EMBED_MODEL` | `text-embedding-qwen3-0.6b-text-embedding` | Tên model embedding trong LM Studio |
-| `LMS_MODEL` | `google/gemma-4-e2b` | Model chat mặc định của LM Studio |
-| `UPLOAD_DIR` | `./uploaded_pdfs` | Thư mục chứa PDF đã tải lên |
+| Hằng số           | Mặc định                                   | Mô tả                                             |
+| ----------------- | ------------------------------------------ | ------------------------------------------------- |
+| `QDRANT_URL`      | `http://localhost:6333`                    | URL của Qdrant server                             |
+| `COLLECTION_NAME` | `PDF_collection`                           | Tên collection trong Qdrant                       |
+| `VECTOR_SIZE`     | `1024`                                     | Phải khớp với số chiều đầu ra của model embedding |
+| `EMBED_MODEL`     | `text-embedding-qwen3-0.6b-text-embedding` | Tên model embedding trong LM Studio               |
+| `LMS_MODEL`       | `google/gemma-4-e2b`                       | Model chat mặc định của LM Studio                 |
+| `UPLOAD_DIR`      | `./uploaded_pdfs`                          | Thư mục chứa PDF đã tải lên                       |
 
 Tham số chia chunk có thể điều chỉnh trong `embedder.py → load_and_index()`:
 
-| Tham số | Mặc định | Mô tả |
-|---|---|---|
-| `chunk_size` | `1200` | Số ký tự tối đa mỗi chunk |
-| `chunk_overlap` | `200` | Số ký tự chồng lấp giữa các chunk liên tiếp |
+| Tham số         | Mặc định | Mô tả                                       |
+| --------------- | -------- | ------------------------------------------- |
+| `chunk_size`    | `1200`   | Số ký tự tối đa mỗi chunk                   |
+| `chunk_overlap` | `200`    | Số ký tự chồng lấp giữa các chunk liên tiếp |
 
 Tham số truy xuất có thể điều chỉnh trong `retriever.py → retrieve()`:
 
-| Tham số | Mặc định | Mô tả |
-|---|---|---|
-| `k` | `5` | Số lượng chunk cần truy xuất |
-| `score_threshold` | `0.2` | Điểm tương đồng cosine tối thiểu |
+| Tham số           | Mặc định | Mô tả                            |
+| ----------------- | -------- | -------------------------------- |
+| `k`               | `5`      | Số lượng chunk cần truy xuất     |
+| `score_threshold` | `0.2`    | Điểm tương đồng cosine tối thiểu |
 
 ---
 
@@ -256,6 +270,13 @@ Dự án này là mã nguồn mở. Xem chi tiết giấy phép trong repository
 
 ---
 
-## 🙏 Lời cảm ơn
+## Công nghệ sử dụng
 
 Xây dựng với [FastAPI](https://fastapi.tiangolo.com/), [LangChain](https://python.langchain.com/), [Qdrant](https://qdrant.tech/), [LM Studio](https://lmstudio.ai/) và [Unstructured](https://unstructured.io/).
+
+# Các tài liệu liên quan
+
+Python For AI: [https://python.datalumina.com/](https://python.datalumina.com/)
+Qdrant Quick Start: [https://qdrant.tech/documentation/quickstart/](https://qdrant.tech/documentation/quickstart/)
+Docker Get Started: [https://docs.docker.com/get-started/](https://docs.docker.com/get-started/)
+Get started with LM Studio [https://lmstudio.ai/docs/app/basics](https://lmstudio.ai/docs/app/basics)
