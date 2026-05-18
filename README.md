@@ -277,6 +277,9 @@ Xây dựng với [FastAPI](https://fastapi.tiangolo.com/), [LangChain](https://
 # Các tài liệu liên quan
 
 **Python For AI:** [https://python.datalumina.com/](https://python.datalumina.com/)
+
 **Qdrant Quick Start:** [https://qdrant.tech/documentation/quickstart/](https://qdrant.tech/documentation/quickstart/)
+
 **Docker Get Started:** [https://docs.docker.com/get-started/](https://docs.docker.com/get-started/)
+
 **Get started with LM Studio:** [https://lmstudio.ai/docs/app/basics](https://lmstudio.ai/docs/app/basics)
