@@ -1,10 +1,10 @@
-# 🤖 RAG with UI
+# RAG with UI
 
 Hệ thống **Retrieval-Augmented Generation (RAG)** chạy hoàn toàn cục bộ, kèm giao diện chat trên trình duyệt. Tải lên tài liệu PDF, hệ thống tự động lập chỉ mục vào cơ sở dữ liệu vector, sau đó bạn có thể đặt câu hỏi — hệ thống tìm kiếm các đoạn văn liên quan và tạo ra câu trả lời có căn cứ bằng LLM cục bộ hoặc đám mây.
 
 ---
 
-## ✨ Tính năng
+## Tính năng
 
 - **Nhập liệu PDF** — Tải lên một hoặc nhiều file PDF qua giao diện web; tài liệu được tự động chia nhỏ, nhúng vector và lưu vào Qdrant.
 - **Tìm kiếm ngữ nghĩa** — Câu hỏi được nhúng thành vector và so sánh với các đoạn tài liệu bằng độ tương đồng cosine qua Qdrant.
@@ -15,7 +15,7 @@ Hệ thống **Retrieval-Augmented Generation (RAG)** chạy hoàn toàn cục b
 
 ---
 
-## 🏗️ Kiến trúc
+## Kiến trúc
 
 ```
 rag-with-ui/
@@ -31,33 +31,33 @@ rag-with-ui/
 
 ---
 
-## 🔄 Luồng hoạt động (Workflow)
+## Luồng hoạt động (Workflow)
 
 ```mermaid
 flowchart TD
-    subgraph PHASE1["📥 Giai đoạn 1 — Lập chỉ mục"]
-        A([👤 Người dùng]) -->|Tải lên PDF| B[POST /upload]
+    subgraph PHASE1["Giai đoạn 1 — Lập chỉ mục"]
+        A([Người dùng]) -->|Tải lên PDF| B[POST /upload]
         B --> C[DirectoryLoader\nLangChain + Unstructured]
         C --> D[RecursiveCharacterTextSplitter\n1200 ký tự · overlap 200]
         D --> E[Embedding Model\nQwen3-0.6b · 1024 chiều]
         E --> F[(Qdrant\nPDF_collection)]
     end
 
-    subgraph PHASE2["💬 Giai đoạn 2 — Truy vấn"]
-        G([👤 Người dùng]) -->|Đặt câu hỏi| H[POST /ask]
+    subgraph PHASE2["Giai đoạn 2 — Truy vấn"]
+        G([Người dùng]) -->|Đặt câu hỏi| H[POST /ask]
         H --> I[Embedding Model\nQwen3-0.6b · 1024 chiều]
         I -->|Vector câu hỏi| J[(Qdrant\nCosine Search · top-5 · score ≥ 0.2)]
         J -->|Các đoạn liên quan + metadata| K[Xây dựng Context\nsource · page]
         K --> L{LLM Backend}
         L -->|lmstudio| M[LM Studio\nGemma / GGUF]
         L -->|qwen| N[Qwen DashScope\nqwen-plus / max / turbo]
-        M --> O([✅ Câu trả lời có trích dẫn])
+        M --> O([Câu trả lời có trích dẫn])
         N --> O
     end
 
     F -.->|Vector index| J
 
-    subgraph API["⚙️ Quản lý Runtime"]
+    subgraph API["Quản lý Runtime"]
         P[POST /set-model] -->|Chuyển backend| L
         Q[GET /list-files] --> R[Danh sách PDF]
         S[GET /current-model] --> T[Backend đang dùng]
@@ -85,7 +85,7 @@ Khi người dùng gửi câu hỏi qua giao diện hoặc gọi `POST /ask`:
 
 ---
 
-## 🛠️ Công nghệ sử dụng
+## Công nghệ sử dụng
 
 | Thành phần           | Công nghệ                                                          |
 | -------------------- | ------------------------------------------------------------------ |
@@ -100,7 +100,7 @@ Khi người dùng gửi câu hỏi qua giao diện hoặc gọi `POST /ask`:
 
 ---
 
-## ⚙️ Yêu cầu trước khi cài đặt
+## Yêu cầu trước khi cài đặt
 
 Trước khi chạy dự án, hãy đảm bảo bạn đã có:
 
@@ -118,7 +118,7 @@ docker run -p 6333:6333 qdrant/qdrant
 
 ---
 
-## 🚀 Cài đặt
+## Cài đặt
 
 ### 1. Clone repository
 
@@ -163,7 +163,7 @@ python main.py
 
 ---
 
-## 📡 Tài liệu API
+## Tài liệu API
 
 ### `GET /`
 
@@ -233,7 +233,7 @@ Gửi câu hỏi và nhận câu trả lời có căn cứ từ pipeline RAG.
 
 ---
 
-## 🔧 Cấu hình
+## Cấu hình
 
 Các hằng số quan trọng trong `main.py` có thể điều chỉnh cho phù hợp:
 
@@ -262,7 +262,7 @@ Tham số truy xuất có thể điều chỉnh trong `retriever.py → retrieve
 
 ---
 
-## 💡 Cách hoạt động của Prompt
+## Cách hoạt động của Prompt
 
 Hệ thống dùng một template prompt nghiêm ngặt, tập trung vào trích dẫn (định nghĩa trong `chatbot.py`):
 
@@ -285,7 +285,7 @@ Thiết kế này đảm bảo model không hallucinate và luôn truy nguyên c
 
 ---
 
-## 🗺️ Mở rộng dự án
+## Mở rộng dự án
 
 **Thêm backend LLM mới** — Tạo một class có phương thức `respond(prompt: str) -> str` và thuộc tính `label`, sau đó đăng ký trong `main.py → set_model()`. Skeleton backend Gemini đã có sẵn trong `chatbot.py` (dưới dạng comment) để tham khảo.
 
@@ -295,7 +295,7 @@ Thiết kế này đảm bảo model không hallucinate và luôn truy nguyên c
 
 ---
 
-## 📄 Giấy phép
+## Giấy phép
 
 Dự án này là mã nguồn mở. Xem chi tiết giấy phép trong repository.
 
