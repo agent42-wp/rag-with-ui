@@ -267,6 +267,14 @@ Tham số truy xuất có thể điều chỉnh trong `retriever.py → retrieve
 Hệ thống dùng một template prompt nghiêm ngặt, tập trung vào trích dẫn (định nghĩa trong `chatbot.py`):
 
 ```
+You are a strict, citation-focused assistant for a private knowledge base.
+RULES:
+1. Use ONLY the provided content to answer.
+2. If the answer is not clearly contained in the content, say:
+   "I don't know based on the provided documents."
+3. Do NOT use outside knowledge, guessing, or web information.
+4. If applicable, cite source as (source:page) using the metadata.
+
 Content:
 [các đoạn truy xuất kèm metadata source/page]
 
